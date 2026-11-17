@@ -1,10 +1,10 @@
 from accounts.models import Membership
 from crm.models import ActivityLog, Contact, Customer, Deal, Lead, Task
 from crm.serializers import (ActivityLogSerializer,ContactSerializer,CustomerSerializer,DealSerializer, LeadSerializer,TaskSerializer,)
-from rest_framework import ppermissions, viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.exceptions import PermissionDenied
 
-class TenanrModelViewSet(viewsets.ModelViewSet):
+class TenantModelViewSet(viewsets.ModelViewSet):
     permission_classes=[permissions.IsAuthenticated]
 
     def get_active_orginazation(self):
@@ -44,7 +44,7 @@ class TenanrModelViewSet(viewsets.ModelViewSet):
             serializer.save(organization=organization)
 
 
-class CustomerViewSet(TenantModelsViewSer):
+class CustomerViewSet(TenantModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
 

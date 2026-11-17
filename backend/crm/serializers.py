@@ -1,5 +1,5 @@
 from accounts.serializers import UserSerializer
-from crm.models import ActivityLog, Contact, Customer,Deal,Load,Task
+from crm.models import ActivityLog, Contact, Customer,Deal,Lead,Task
 from rest_framework import serializers
 
 class CustomerSerializer(serializers.ModelSerializer):
