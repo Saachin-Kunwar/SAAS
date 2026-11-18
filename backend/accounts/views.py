@@ -10,6 +10,8 @@ from rest_framework import generics, permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import IsOrganizationOwnerOrAdmin
+
 
 # User Registration API
 class RegisterView(generics.CreateAPIView):
@@ -28,33 +30,31 @@ class UserProfileView(APIView):
 
 
 # Organization Management API
+from accounts.permissions import IsOrganizationOwnerOrAdmin
+# ... keep existing imports ...
+
+
 class OrganizationViewSet(viewsets.ModelViewSet):
-    serializer_class = OrganizationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+  """API endpoint for managing Organizations and Memberships (Tenants)."""
 
-    def get_queryset(self):
-        user = self.request.user
+  serializer_class = OrganizationSerializer
+  permission_classes = [permissions.IsAuthenticated]
 
-        # Superusers can access all organizations
-        if user.is_superuser:
-            return Organization.objects.all()
+  def get_permissions(self):
+    """Enforce strict RBAC: Only Owners/Admins can update or delete organizations."""
+    if self.action in ['update', 'partial_update', 'destroy']:
+      return [permissions.IsAuthenticated(), IsOrganizationOwnerOrAdmin()]
+    return [permissions.IsAuthenticated()]
 
-        # Regular users can only access organizations
-        # where they have membership
-        user_org_ids = user.memberships.values_list(
-            'organization_id',
-            flat=True
-        )
+  def get_queryset(self):
+    user = self.request.user
+    if user.is_superuser:
+      return Organization.objects.all()
+    user_org_ids = user.memberships.values_list('organization_id', flat=True)
+    return Organization.objects.filter(id__in=user_org_ids)
 
-        return Organization.objects.filter(id__in=user_org_ids)
-
-    def perform_create(self, serializer):
-        # Save the organization
-        organization = serializer.save()
-
-        # Automatically make the creator an OWNER
-        Membership.objects.create(
-            user=self.request.user,
-            organization=organization,
-            role='OWNER'
-        )
+  def perform_create(self, serializer):
+    organization = serializer.save()
+    Membership.objects.create(
+        user=self.request.user, organization=organization, role='OWNER'
+    )
