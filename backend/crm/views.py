@@ -7,9 +7,9 @@ from rest_framework.exceptions import PermissionDenied
 class TenantModelViewSet(viewsets.ModelViewSet):
     permission_classes=[permissions.IsAuthenticated]
 
-    def get_active_orginazation(self):
+    def get_active_organization(self):
         #Extract the active orginazations from request headers or user memberships.
-        org_ig = self.request.headers.get('X-Organization-ID')
+        org_id = self.request.headers.get('X-Organization-ID')
         user= self.request.user
 
         if org_id:
@@ -18,7 +18,7 @@ class TenantModelViewSet(viewsets.ModelViewSet):
                 return org_id
             raise PermissionDenied('You do not belongs to this orginazation or it does not exist.')
         #default to users first organization membership
-        first_membershipp= user.memberships.first()
+        first_membership = user.memberships.first()
         if first_membership:
             return first_membership.organization.id 
         raise PermissionDenied('User does not belong to any organization.Please create or join one')
@@ -26,9 +26,9 @@ class TenantModelViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         #filter queryset strictly by the active organization
         org_id = self.get_active_organization()
-        return self.queryset.filter(organization_id=org_id)
+        return self.queryset.filter(organization_id=org_id).order_by('id')
 
-    def perform_create(Self,serializer):
+    def perform_create(self, serializer):
         #Automatically attach active organization and creates_by user opon creation
         from accounts.models import Organization
 

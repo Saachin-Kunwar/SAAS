@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import IsOrganizationOwnerOrAdmin
+from django.utils.text import slugify
 
 
 # User Registration API
@@ -49,12 +50,12 @@ class OrganizationViewSet(viewsets.ModelViewSet):
   def get_queryset(self):
     user = self.request.user
     if user.is_superuser:
-      return Organization.objects.all()
+      return Organization.objects.all().order_by('id')
     user_org_ids = user.memberships.values_list('organization_id', flat=True)
-    return Organization.objects.filter(id__in=user_org_ids)
+    return Organization.objects.filter(id__in=user_org_ids).order_by('id')
 
   def perform_create(self, serializer):
-    organization = serializer.save()
+    organization = serializer.save(slug=slugify(serializer.validated_data['name']))
     Membership.objects.create(
         user=self.request.user, organization=organization, role='OWNER'
     )

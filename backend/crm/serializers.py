@@ -22,9 +22,11 @@ class ContactSerializer(serializers.ModelSerializer):
 
 class LeadSerializer(serializers.ModelSerializer):
     #serializer for sales leads
+    assigned_to_username = serializers.ReadOnlyField(source='assigned_to.username')
+
     class Meta:
         model=Lead
-        fields=('id','organization','first_name','last_name','email','phone','company_name','status','assigned_to_username','created_at','updated_at',)
+        fields=('id','organization','first_name','last_name','email','phone','company_name','status','assigned_to','assigned_to_username','created_at','updated_at',)
         read_only_fields=('id','organization','created_at','updated_at')
 
 class DealSerializer(serializers.ModelSerializer):
